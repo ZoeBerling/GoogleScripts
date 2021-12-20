@@ -1,0 +1,35 @@
+function CheckInventory2() {
+  // Fetch the inventory for each product
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("USAInventory");
+  var startRow = 3;
+  var numRows = 175;  // There are 175 products in this particular sheet
+  var dataRange = sheet.getRange (startRow, 1, numRows, 7);
+  var data =dataRange.getValues();
+ 
+  var message = "<html><body><table style=\"text-align:center\"></tr><th>SKU</th><th>Description</th><th>Quantity</th><th>Minimum</th></tr>";
+  var sendEmail = false; //if there is content to send, this will be set to true
+  for (var i = 0; i < data.length; ++i) {
+    var rowData = data[i];
+    var SKU = rowData[0];  // this is the sku
+    var Description = rowData[1];  // this is the product description
+    var Minimum = rowData[6];  // This is a minimum tolerance number set by production
+    var Quantity = rowData[5]; // This is the inventory quantity
+    if (Quantity < Minimum) {
+     message+="<tr><td>"+ SKU+"</td><td>"+Description+"</td><td>"+Quantity+"</td><td>"+Minimum+"</td></tr>";
+    }
+      sendEmail = true;
+    }
+  
+
+     // Fetch the email address
+  // Send Alert Email.
+message += "</table></body></html>";
+if (sendEmail) {
+     var subject = 'Friendly Daily Reminder to Check Inventory!' ; // Second columm
+  MailApp.sendEmail({
+    to: "test@gmail.com", // set this to the email address to send the report
+    subject: subject,
+    htmlBody: message
+  });
+    }
+}
