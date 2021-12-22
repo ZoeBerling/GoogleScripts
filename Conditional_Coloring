@@ -1,0 +1,25 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getActiveSheet();
+var rangeData = sheet.getDataRange();
+var lastColumn = rangeData.getLastColumn();
+var lastRow = rangeData.getLastRow();
+var searchRange = sheet.getRange(2,2, lastRow-1, lastColumn-1);
+
+function goodWay() {
+  // Get array of values in the search Range
+  var rangeValues = searchRange.getValues();
+  // Loop through array and if condition met, add relevant
+  // background color.
+  for ( i = 0; i < lastColumn - 1; i++){ // iterate through the columns left to right
+    for ( j = 0 ; j < lastRow - 1; j++){  // iterate through the rows top to bottom
+      if((rangeValues[j][i]*1.1) < (rangeValues[j][i+1])){ // is the next column >= 110% of the current column
+        sheet.getRange(j+2,i+3).setBackground("#a6ee5f");  // color the next column same row
+      }else if (rangeValues[j][i] === 0){
+        sheet.getRange(j+2,i+2).setBackground("#cf7517");
+      }else if ((rangeValues[j][i]*.8) > (rangeValues[j][i+1])){ // is the next column < 80% of the current column
+        sheet.getRange(j+2,i+3).setBackground("#fbbc04");  // color the next column same row
+      };
+    };
+  };
+ 
+};
