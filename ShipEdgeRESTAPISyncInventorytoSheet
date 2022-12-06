@@ -1,0 +1,49 @@
+function myFunction() {. // replace # with unique otw/shipedge data
+  var proddict = {
+  "account_id": ##,
+  "key": "#########",
+  "warehouse": "######",
+  "page": #
+  }
+
+  var options = {
+  'method' : 'post',
+  // 'contentType': 'application/json; charset=UTF-8',
+  'payload' : JSON.stringify(proddict),
+  };
+
+  var response = UrlFetchApp.fetch('http://iotaintegration.shipedge.com/API/Rest/v2/Inventory/get_products',options);
+
+  Logger.log(response.getResponseCode());
+  var json =  response.getContentText()
+  // Logger.log(response.getContentText());
+  var data = JSON.parse(json);
+   
+  var p = data["products"].length // length of the returned data
+  Logger.log(data["products"].length);
+
+  var alist = [];
+  for (var counter = 0; counter <= p; counter = counter + 1) {
+    if (data['products'][counter] != null){  // check that data is not empty
+  
+  Logger.log([data['products'][counter]['sku'], data['products'][counter]['weight']])
+  Logger.log(data['products'][counter])
+
+  alist.push([data['products'][counter]['sku'] , data['products'][counter]['quantity_available'],
+            data['products'][counter]['quantity_shipped'], data['products'][counter]['quantity_reserved'],
+            data['products'][counter]['updated_date']])
+  // Logger.log([data['products'][counter]['sku'] , data['products'][counter]['quantity_in_warehouse'],data['products'][counter]['quantity_available'], data['products'][counter]['quantity_shipped'], data['products'][counter]['quantity_reserved'], data['products'][counter]['updated_date']]);
+
+    }
+  }
+
+SpreadsheetApp.getActive().getSheetByName('Sheet1').getRange(1 + 1,1,alist.length, alist[0].length).setValues(alist);
+}
+
+function onOpen() { // Add sync as option to Google Sheets
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('OTW Inventory Sync')
+      .addItem('Sync','myFunction')
+      .addToUi();
+}
+   
