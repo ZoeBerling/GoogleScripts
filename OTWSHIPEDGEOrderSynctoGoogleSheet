@@ -1,0 +1,77 @@
+function myFunction2(num, alist) { // replace # with otw/shipedge data
+  var proddict = {
+  "account_id": ##,
+  "key": ###########,
+  "warehouse": ###,
+  "page": num,  # this var is set by the for-loop below
+  "status": "all"
+  }
+
+  var options = {
+  'method' : 'post',
+  // 'contentType': 'application/json; charset=UTF-8',
+  'payload' : JSON.stringify(proddict),
+  };
+
+  var response = UrlFetchApp.fetch('http://iotaintegration.shipedge.com/API/Rest/v2/Orders/get_orders',options);
+  var getres = UrlFetchApp.getRequest('http://iotaintegration.shipedge.com/API/Rest/v2/Replenishment/get_reple/530/otw1',     options);
+  Logger.log(getres)
+  Logger.log(response.getResponseCode());
+  // Logger.log(response)
+  var json =  response.getContentText()
+  // Logger.log(json)
+  var data = JSON.parse(json);
+   
+  // Logger.log(data['orders'])
+  var p = data["orders"].length // length of the returned data
+
+  for (var counter = 0; counter <= p; counter = counter + 1) {
+    if (data['orders'][counter] != null){  // check that data is not empty
+    Logger.log(data['orders'][counter])
+    // Logger.log(data['orders'][counter]['order_comments'])
+    var p2 = data['orders'][counter]['items'].length
+    var prod = 0
+    for (var coun = 0; coun <p2; coun = coun + 1){
+   
+    prod += parseInt(data['orders'][counter]['items'][coun]['quantity'])
+    }
+    
+  
+  // Logger.log([data['orders'][counter]['sku'], data['products'][counter]['weight']])
+  // 
+  // Logger.log([data['orders'][counter]['order_number'],data['orders'][counter]['pending_date'], data['orders'][counter]['shipping_date'], data['orders'][counter]['shipping']['tracking_number'], 
+  // data['orders'][counter]['shipping']['description'], data['orders'][counter]['shipping_charge'], data['orders'][counter]['items'].length, data['orders'][counter]['quantity'] ])
+  
+  // Logger.log(data['orders'][counter]['items'])
+
+  alist.push([data['orders'][counter]['order_number'],data['orders'][counter]['pending_date'], data['orders'][counter]['shipping_date'], data['orders'][counter]['shipping']['tracking_number'], 
+  data['orders'][counter]['shipping']['description'], data['orders'][counter]['customer']['email'],
+  data['orders'][counter]['order_comments'],
+   data['orders'][counter]['items'].length, prod, data['orders'][counter]['shipping_charge']])
+
+  // Logger.log([data['products'][counter]['sku'] , data['products'][counter]['quantity_in_warehouse'],data['products'][counter]['quantity_available'], data['products'][counter]['quantity_shipped'], data['products'][counter]['quantity_reserved'], data['products'][counter]['updated_date']]);
+
+    }
+  }
+
+};
+
+function newFunct(){
+
+var alist = [];
+var page = SpreadsheetApp.getActive().getSheetByName('orders').getRange(1, 2).getValue(); // otw can't tell how many pages of orders there are so save this in A2 to pull all pages of orders: make sure to offset header by 1 row
+
+for (var num = 0; num <= page; num = num + 1) { // otw can only pull one page of orders at a time
+myFunction2(num, alist)
+
+}
+
+SpreadsheetApp.getActive().getSheetByName('orders').getRange(1 + 2,1,alist.length, alist[0].length).setValues(alist);
+};
+
+function onOpenorder() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('OTW order Sync')
+      .addItem('Sync','newFunct')
+      .addToUi();
+}
